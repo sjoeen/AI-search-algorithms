@@ -81,18 +81,17 @@ class CubeTower:
         pass
 
 
-    
+
+
 def dfs_search(tower,rotations,max_rotations = 10):
     """
-    took inspiration from a bruto force sudoku solver algorithm i created last year,
-    and modified it simpler.
-    My code was inspired again by this code:
-    https://gist.github.com/syphh/62e6140361feb2d7196f2cb050c987b3
+    took inspiration from a bruto force sudoku solver algorithm I created last year.
     """
     global global_iteration
         #counts iterations
 
     if check(tower):
+        #a solution is found
         print("\n",tower)
         return True
     
@@ -103,8 +102,6 @@ def dfs_search(tower,rotations,max_rotations = 10):
     for i in range(len(tower)):
 
         global_iteration += 1
-        print(f"\n",tower)
-            #test statements, remove afterwards
         
         copy_tower = tower.copy()
             #copy tower before modyfiying it, in case of backtracking. 
@@ -124,9 +121,48 @@ def dfs_search(tower,rotations,max_rotations = 10):
 
     
 
-def bfs_search(tower):
-    # Implement Breadth-First Search
-    pass
+def bfs_search(tower,max_iterations = 1000):
+    """
+    #https://chatgpt.com/c/6790a989-d324-800d-8300-e415039f89ce
+    """
+    
+    queue = []
+    visited_matrixes = []
+        #needs to be a list for flexibility
+    visited_matrixes.append(tower.copy())
+    queue.append(tower.copy())
+        #adds the original state.
+
+
+    for _ in range(max_iterations):
+        current = queue.pop(0)
+            #takes out the first element of the queue
+        visited_matrixes.append(current)
+            #adds the current to used matrixes
+
+        if check(current):
+            print(current)
+            print(f"problem solved after {_} iterations using bfs search algorithm.")
+            return True
+                #solution is found
+
+        for i in range(len(current)):
+            placeholder = current.copy()
+            (rotate_upward(placeholder,i))
+                 #finds new matrixes to test
+
+            if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
+                #check if a matrix is already visited, chatgpt wrote this line of code.
+                queue.append(placeholder)
+                    #if not visted, add it to queue 
+
+    return False
+        #no solution was found
+
+
+
+
+
 
 def a_star_search(tower):
     # Implement A* Search
@@ -137,13 +173,16 @@ def a_star_search(tower):
 
 
 
+
 if __name__ == "__main__":
     initial_configuration = np.array([
-        ["red", "blue", "green", "yellow"],  # Nederste kube
-        ["blue", "green", "yellow", "red"], # Midterste kube
-        ["green", "yellow", "red", "blue"]  # Øverste kube
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"]  
     ])
 
     global_iteration = 0
     a = dfs_search(initial_configuration,0)
-    print(f"\nProblem solved after {global_iteration} iterations using dfs algorithm.")
+    print(f"Problem solved after {global_iteration} iterations using dfs algorithm.\n")
+
+    a = bfs_search(initial_configuration)

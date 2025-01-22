@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 from rules import rotate_partial,rotate_upward,check
 
 class CubeTower:
@@ -121,7 +122,7 @@ def dfs_search(tower,rotations,max_rotations = 10):
 
     
 
-def bfs_search(tower,max_iterations = 1000):
+def bfs_search(tower,max_iterations = 10000):
     """
     #https://chatgpt.com/c/6790a989-d324-800d-8300-e415039f89ce
     """
@@ -152,9 +153,23 @@ def bfs_search(tower,max_iterations = 1000):
                  #finds new matrixes to test
 
             if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
-                #check if a matrix is already visited, chatgpt wrote this line of code.
+                #check if a matrix is in visited list
                 queue.append(placeholder)
                     #if not visted, add it to queue 
+        
+        for idx1 in range(len(current)-1):
+            #-1 since start and end cant be the same idx
+            for idx2 in range(idx1+1,len(current)):
+                #works only with the interval after idx1 is currently at!
+                #checks every option in rotate partial function
+                placeholder = current.copy()
+                rotate_partial(placeholder,idx1,idx2)
+
+                if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
+                    #check if a matrix is in visited list
+                    queue.append(placeholder)
+                        #if not visted, add it to queue 
+
 
     return False
         #no solution was found
@@ -164,9 +179,96 @@ def bfs_search(tower,max_iterations = 1000):
 
 
 
-def a_star_search(tower):
-    # Implement A* Search
-    pass
+def count_rotations(tower):
+    """
+    use the first row as refrence, count amount of rotations required for each row
+    to match by counting idx distance since the cube only rotates one way store in a
+    list and return
+    """
+
+    row,col = tower.shape
+    distances = []
+    #distances.append(0)
+    for i in range(1,row):
+        for j in range(col):
+            if tower[0][0] == tower[i][j]:
+                distances.append(j)
+    return distances
+
+def best_option(tower):
+    """
+    help function for A* algorithm
+    this function decides what rotation option is best to solve the algorithm. 
+    """
+    best_option = None
+    best_start = None
+    best_end = None
+    distances = count_rotations(tower)
+
+    for i in range(1,len(tower)):
+        tower_copy = np.copy(tower)
+        rotate_upward(tower,i)
+
+
+        if max(count_rotations(tower_copy)) <= max(distances):
+            if sum(count_rotations(tower_copy)) < sum(distances):
+                best_start = i
+                best_option = "upward"
+
+        if sum(count_rotations(tower_copy)) == 0:
+             return best_option,best_start,best_end
+
+        
+
+    for idx1 in range(1,len(tower)-1):
+         #-1 since start and end cant be the same idx
+        for idx2 in range(idx1+1,len(tower)):
+            #works only with the interval after idx1 is currently at!
+            #checks every option in rotate partial function
+            placeholder = np.copy(tower)
+            rotate_partial(placeholder,idx1,idx2)
+
+            
+            if max(count_rotations(tower_copy)) <= max(distances):
+                if sum(count_rotations(tower_copy)) < sum(distances):
+                    best_start = idx1
+                    best_end = idx2
+                    best_option = "partial"
+
+            if sum(count_rotations(tower_copy)) == 0:
+                return best_option,best_start,best_end
+
+    return best_option,best_start,best_end
+
+    
+def a_star_search(tower,max_iter=10000):
+
+
+    
+    for _ in range(max_iter):
+
+        if check(tower):
+            #check if we found a solution
+            print(tower)
+            print(_)
+            return True
+        #print("\n",tower)
+
+        best_options,start,end = best_option(tower)
+            #finds optimal next move
+        #print(best_options,start,end)
+
+        if best_options == "upward":
+            rotate_upward(tower,start)
+        
+        if best_options == "partial":
+            rotate_partial(tower,start,end)
+
+    return False
+
+
+
+
 
 # Additional advanced search algorithm
 # ...
@@ -185,4 +287,43 @@ if __name__ == "__main__":
     a = dfs_search(initial_configuration,0)
     print(f"Problem solved after {global_iteration} iterations using dfs algorithm.\n")
 
+    initial_configuration = np.array([
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"]  
+    ])
     a = bfs_search(initial_configuration)
+    print(count_rotations(initial_configuration))
+
+    initial_configuration = np.array([
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"]  
+    ])
+    a,b,c = (best_option(initial_configuration))
+
+    print(a,b,c)
+    print(a_star_search(initial_configuration))
+
+    tower = np.array([
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"] 
+    ])
+
+    a,b,c = best_option(tower)
+    print(a,b,c)
+
+    print(a_star_search(tower))
+
+    
+

@@ -11,7 +11,7 @@ def rotate_upward(tower,index):
 
     rotate_rows = tower[0:index+1:]
         #slice all rows from start to given index
-    rotated_rows = np.roll(rotate_rows,shift=1,axis=1)
+    rotated_rows = np.roll(rotate_rows,shift=-1,axis=1)
         #rotate desired rows
     tower[0:index+1] = rotated_rows
         #slice rows back into original data
@@ -33,7 +33,7 @@ def rotate_partial(tower,start,end):
 
     rotate_rows = tower[start:end]
         #slice
-    rotated_rows = np.roll(rotate_rows,shift=1,axis=1)
+    rotated_rows = np.roll(rotate_rows,shift=-1,axis=1)
         #rotate desired rows
     tower[start:end] = rotated_rows
         #slice them back into original data

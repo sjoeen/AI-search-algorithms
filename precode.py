@@ -106,16 +106,17 @@ def dfs_search(tower,rotations,max_rotations = 10):
         
         copy_tower = tower.copy()
             #copy tower before modyfiying it, in case of backtracking. 
-
-        rotate_upward(tower,i)
+        rotation = [-1,1]
+        for direction in rotation:
+            rotate_upward(tower,i,direction)
             #rotate upwards for given index
 
-        if dfs_search(tower,rotations+1):
-            #breaks loop if the nextt rotation solves the problem. 
-            return True
+            if dfs_search(tower,rotations+1):
+                #breaks loop if the nextt rotation solves the problem. 
+                return True
         
-        tower = copy_tower
-            #backtrack when reached max depth
+            tower = copy_tower
+                #backtrack when reached max depth
     
     return False   
 
@@ -139,7 +140,7 @@ def bfs_search(tower,max_iterations = 10000):
         current = queue.pop(0)
             #takes out the first element of the queue
         visited_matrixes.append(current)
-            #adds the current to used matrixes
+            #adds the current to visited matrixes
 
         if check(current):
             print(current)
@@ -148,27 +149,31 @@ def bfs_search(tower,max_iterations = 10000):
                 #solution is found
 
         for i in range(len(current)):
-            placeholder = current.copy()
-            (rotate_upward(placeholder,i))
-                 #finds new matrixes to test
+            rotations = [-1,1]
+            for rotation in rotations:
+                placeholder = current.copy()
+                (rotate_upward(placeholder,i,rotation))
+                    #finds new matrixes to test
 
-            if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
-                #check if a matrix is in visited list
-                queue.append(placeholder)
-                    #if not visted, add it to queue 
+                if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
+                    #check if a matrix is in visited list
+                    queue.append(placeholder)
+                        #if not visted, add it to queue 
         
         for idx1 in range(len(current)-1):
             #-1 since start and end cant be the same idx
             for idx2 in range(idx1+1,len(current)):
                 #works only with the interval after idx1 is currently at!
                 #checks every option in rotate partial function
-                placeholder = current.copy()
-                rotate_partial(placeholder,idx1,idx2)
+                rotations = [-1,1]
+                for rotation in rotations:
+                    placeholder = current.copy()
+                    rotate_partial(placeholder,idx1,idx2,rotation)
 
-                if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
-                    #check if a matrix is in visited list
-                    queue.append(placeholder)
-                        #if not visted, add it to queue 
+                    if not any(np.array_equal(placeholder, arr) for arr in visited_matrixes):
+                        #check if a matrix is in visited list
+                        queue.append(placeholder)
+                            #if not visted, add it to queue 
 
 
     return False
@@ -195,6 +200,22 @@ def count_rotations(tower):
                 distances.append(j)
     return distances
 
+def count_rotations(tower):
+    """
+    use the last row as reference, count amount of rotations required for each row
+    to match by counting idx distance since the cube only rotates one way store in a
+    list and return
+    """
+
+    row,col = tower.shape
+    distances = []
+    #distances.append(0)
+    for i in range(0,row-1):
+        for j in range(col):
+            if tower[-1][0] == tower[i][j]:
+                distances.append(j)
+    return distances
+
 def best_option(tower):
     """
     help function for A* algorithm
@@ -203,46 +224,59 @@ def best_option(tower):
     best_option = None
     best_start = None
     best_end = None
+    best_direction = None
     distances = count_rotations(tower)
 
-    for i in range(1,len(tower)):
-        tower_copy = np.copy(tower)
-        rotate_upward(tower,i)
 
 
-        if max(count_rotations(tower_copy)) <= max(distances):
-            if sum(count_rotations(tower_copy)) < sum(distances):
-                best_start = i
-                best_option = "upward"
+    for i in range(0,len(tower)):
 
-        if sum(count_rotations(tower_copy)) == 0:
-             return best_option,best_start,best_end
+        rotations = [-1,1]
+        for direction in rotations:
+            tower_copy = np.copy(tower)
+            rotate_upward(tower_copy,i,direction)
+            distance_copy = count_rotations(tower_copy)
 
+
+            if max(distance_copy) <= max(distances):
+                if sum(distance_copy) < sum(distances):
+                    best_start = i
+                    best_option = "upward"
+                    best_direction = direction
+                    best_end = None
+
+        #if sum(count_rotations(tower_copy)) == 0:
+            #return best_option,best_start,best_end
+    
         
 
-    for idx1 in range(1,len(tower)-1):
+    for idx1 in range(0,len(tower)-1):
          #-1 since start and end cant be the same idx
         for idx2 in range(idx1+1,len(tower)):
             #works only with the interval after idx1 is currently at!
             #checks every option in rotate partial function
-            placeholder = np.copy(tower)
-            rotate_partial(placeholder,idx1,idx2)
 
-            
-            if max(count_rotations(tower_copy)) <= max(distances):
-                if sum(count_rotations(tower_copy)) < sum(distances):
-                    best_start = idx1
-                    best_end = idx2
-                    best_option = "partial"
+            rotations = [-1,1]
+            for direction in rotations:
+                tower_copy = np.copy(tower)
+                rotate_partial(tower_copy,idx1,idx2,direction)
+                distance_copy = count_rotations(tower_copy)
 
-            if sum(count_rotations(tower_copy)) == 0:
-                return best_option,best_start,best_end
+          
+                if max(distance_copy) <= max(distances):
+                    if sum(distance_copy) < sum(distances):
+                        best_start = idx1
+                        best_end = idx2
+                        best_option = "partial"
+                        best_direction = direction
 
-    return best_option,best_start,best_end
+            #if sum(count_rotations(distance_copy)) == 0:
+                #return best_option,best_start,best_end
 
-    
-def a_star_search(tower,max_iter=10000):
+    return best_option,best_start,best_end,best_direction
 
+
+def greedy_first(tower,max_iter=1000):
 
     
     for _ in range(max_iter):
@@ -250,21 +284,21 @@ def a_star_search(tower,max_iter=10000):
         if check(tower):
             #check if we found a solution
             print(tower)
-            print(_)
+            print(f"problem solved after {_} iterations using greedy first algorithm.")
             return True
-        #print("\n",tower)
 
-        best_options,start,end = best_option(tower)
+        best_options,start,end,direction = best_option(tower)
             #finds optimal next move
-        #print(best_options,start,end)
+
 
         if best_options == "upward":
-            rotate_upward(tower,start)
+            rotate_upward(tower,start,direction)
         
         if best_options == "partial":
-            rotate_partial(tower,start,end)
+            rotate_partial(tower,start,end,direction)
 
     return False
+
 
 
 
@@ -293,17 +327,14 @@ if __name__ == "__main__":
         ["green", "yellow", "red", "blue"]  
     ])
     a = bfs_search(initial_configuration)
-    print(count_rotations(initial_configuration))
 
     initial_configuration = np.array([
         ["red", "blue", "green", "yellow"],  
         ["blue", "green", "yellow", "red"], 
         ["green", "yellow", "red", "blue"]  
     ])
-    a,b,c = (best_option(initial_configuration))
-
-    print(a,b,c)
-    print(a_star_search(initial_configuration))
+ 
+    a = greedy_first(initial_configuration)
 
     tower = np.array([
         ["red", "blue", "green", "yellow"],  
@@ -317,13 +348,64 @@ if __name__ == "__main__":
         ["green", "yellow", "red", "blue"],
         ["red", "blue", "green", "yellow"],  
         ["blue", "green", "yellow", "red"], 
-        ["green", "yellow", "red", "blue"] 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"], 
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"] 
     ])
 
-    a,b,c = best_option(tower)
-    print(a,b,c)
 
-    print(a_star_search(tower))
+    a= greedy_first(tower)
+
 
     
 

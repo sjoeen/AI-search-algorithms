@@ -92,7 +92,7 @@ def dfs_search(tower,rotations,max_rotations = 10):
         #counts iterations
 
     if check(tower):
-        #a solution is found
+        #Solution is found
         print("\n",tower)
         return True
     
@@ -108,11 +108,12 @@ def dfs_search(tower,rotations,max_rotations = 10):
             #copy tower before modyfiying it, in case of backtracking. 
         rotation = [-1,1]
         for direction in rotation:
+            #try both directions
             rotate_upward(tower,i,direction)
             #rotate upwards for given index
 
             if dfs_search(tower,rotations+1):
-                #breaks loop if the nextt rotation solves the problem. 
+                #recurtion
                 return True
         
             tower = copy_tower
@@ -125,7 +126,11 @@ def dfs_search(tower,rotations,max_rotations = 10):
 
 def bfs_search(tower,max_iterations = 10000):
     """
-    #https://chatgpt.com/c/6790a989-d324-800d-8300-e415039f89ce
+    the breadth-first search algoritm, tries all different combinations
+    in order to find a solution.
+
+    got a line of code from chatgpt:
+    https://chatgpt.com/c/6790a989-d324-800d-8300-e415039f89ce
     """
     
     queue = []
@@ -151,6 +156,8 @@ def bfs_search(tower,max_iterations = 10000):
         for i in range(len(current)):
             rotations = [-1,1]
             for rotation in rotations:
+                #loops over all rotations 
+
                 placeholder = current.copy()
                 (rotate_upward(placeholder,i,rotation))
                     #finds new matrixes to test
@@ -167,6 +174,7 @@ def bfs_search(tower,max_iterations = 10000):
                 #checks every option in rotate partial function
                 rotations = [-1,1]
                 for rotation in rotations:
+                    #loops over all rotations
                     placeholder = current.copy()
                     rotate_partial(placeholder,idx1,idx2,rotation)
 
@@ -183,28 +191,10 @@ def bfs_search(tower,max_iterations = 10000):
 
 
 
-
-def count_rotations(tower):
-    """
-    use the first row as refrence, count amount of rotations required for each row
-    to match by counting idx distance since the cube only rotates one way store in a
-    list and return
-    """
-
-    row,col = tower.shape
-    distances = []
-    #distances.append(0)
-    for i in range(1,row):
-        for j in range(col):
-            if tower[0][0] == tower[i][j]:
-                distances.append(j)
-    return distances
-
 def count_rotations(tower):
     """
     use the last row as reference, count amount of rotations required for each row
-    to match by counting idx distance since the cube only rotates one way store in a
-    list and return
+    to match.
     """
 
     row,col = tower.shape
@@ -212,14 +202,15 @@ def count_rotations(tower):
     #distances.append(0)
     for i in range(0,row-1):
         for j in range(col):
+            #loops over each row and col
             if tower[-1][0] == tower[i][j]:
                 distances.append(j)
     return distances
 
 def best_option(tower):
     """
-    help function for A* algorithm
-    this function decides what rotation option is best to solve the algorithm. 
+    help function for greedy best algorithm this function decides what
+    rotation is the best next move, by looping over each option. 
     """
     best_option = None
     best_start = None
@@ -228,8 +219,9 @@ def best_option(tower):
     distances = count_rotations(tower)
 
 
-
-    for i in range(0,len(tower)):
+    for i in range(0,len(tower)-1):
+        #checks all options for rotate upward, 
+        #store best result
 
         rotations = [-1,1]
         for direction in rotations:
@@ -245,15 +237,13 @@ def best_option(tower):
                     best_direction = direction
                     best_end = None
 
-        #if sum(count_rotations(tower_copy)) == 0:
-            #return best_option,best_start,best_end
     
         
 
     for idx1 in range(0,len(tower)-1):
-         #-1 since start and end cant be the same idx
+         # -1 since we dont wish to change last idx
         for idx2 in range(idx1+1,len(tower)):
-            #works only with the interval after idx1 is currently at!
+            #works only with the interval after idx1
             #checks every option in rotate partial function
 
             rotations = [-1,1]
@@ -270,8 +260,6 @@ def best_option(tower):
                         best_option = "partial"
                         best_direction = direction
 
-            #if sum(count_rotations(distance_copy)) == 0:
-                #return best_option,best_start,best_end
 
     return best_option,best_start,best_end,best_direction
 
@@ -298,6 +286,14 @@ def greedy_first(tower,max_iter=1000):
             rotate_partial(tower,start,end,direction)
 
     return False
+
+def heuristic(tower):
+    """
+    Help function for A* algorithm. 
+    counts the amount of rows that is identical to the goal 
+    (last row), and therefore undershoots how close the algorithm
+    is to a solution
+    """
 
 
 
@@ -406,6 +402,139 @@ if __name__ == "__main__":
 
     a= greedy_first(tower)
 
+    tower = np.array([
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"], 
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"] 
+    ])
+    a= bfs_search(tower)
 
-    
+    tower = np.array([
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"], 
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"], 
+        ["blue", "green", "yellow", "red"], 
+        ["green", "yellow", "red", "blue"],
+        ["red", "blue", "green", "yellow"],  
+        ["blue", "green", "yellow", "red"] 
+    ])
 
+    a = dfs_search(tower,0)
